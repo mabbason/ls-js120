@@ -1,18 +1,18 @@
 function createBook(title, author, read = false) {
-    return {
-      Title: title,
-      Author: author,
-      read: read,
+  return {
+    Title: title,
+    Author: author,
+    read: read,
 
-      getDescription() {
-          let readStatus = this.read === true ? 'have': 'haven\'t';
-          return `${this.Title} was written by ${this.Author}. I ${readStatus} read it.`;
-      },
+    getDescription() {
+      let readStatus = this.read === true ? 'have' : 'haven\'t';
+      return `${this.Title} was written by ${this.Author}. I ${readStatus} read it.`;
+    },
 
-      readBook() {
-        this.read = true;
-      }
-    };
+    readBook() {
+      this.read = true;
+    }
+  };
 }
 
 let book1 = createBook('Mythos', 'Stephen Fry');
