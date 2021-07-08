@@ -46,15 +46,20 @@ const RPSGame = {
   },
 
   displayRoundWinner() {
-    console.log(`You chose: ${this.human.move}`);
-    console.log(`The computer chose: ${this.computer.move}`);
+    let humanMove = this.human.move;
+    let computerMove = this.computer.move;
+    let textPad = Math.ceil((8 - humanMove.length) / 2);
+    console.log(`\nYou chose      The computer chose`);
+    console.log(`---------  vs  ------------------`);
+    console.log(`${humanMove.padStart(humanMove.length + textPad, ' ').padEnd(textPad, ' ')}      ` +
+    `${computerMove.padStart(13, ' ')}`);
     let winner = this.isRoundWinner();
     if (winner === 'human') {
-      console.log(`You win!`);
+      console.log(`        You win!`);
     } else if (winner === 'computer') {
-      console.log(`The computer won.`);
+      console.log(`    The computer won.`);
     } else {
-      console.log(`It's a tie.`);
+      console.log(`       It's a tie.`);
     }
     console.log(`\nThe current match score is:`);
     console.log(`You: ${this.human.roundScore}  Computer: ${this.computer.roundScore}`);
