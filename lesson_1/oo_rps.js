@@ -30,8 +30,7 @@ const RPSGame = {
 
   enterToContinue() {
     console.log('\nPress enter to continue.');
-    // eslint-disable-next-line no-unused-vars
-    let _ = readline.question();
+    readline.question();
   },
 
   displayWelcomeMsg() {
