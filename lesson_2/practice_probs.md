@@ -443,3 +443,342 @@ let remainingDue = invoiceTotal - paymentTotal;
 console.log(paymentTotal);         // => 6800
 console.log(remainingDue);         // => 2700
 ```
+# Constructors
+# Problem #1
+What naming convention separates constructor functions from other functions?
+Response: the function name begins with a capital letter. 
+
+# Problem #2
+What happens if you run the following code? Why?
+```javascript
+function Lizard() {
+  this.scamper = function() {
+    console.log("I'm scampering!");
+  };
+}
+
+let lizzy = Lizard();
+lizzy.scamper(); // ?
+```
+Response: I believe it will throw an error because `lizzy` was assigned to the value returned by invoking the function `Lizard`. There is no explicit return in `Lizard()` so it returns the value `undefined`. Then on the last line, the `scamper()` method is attempted to be called on the `lizzy` object.... except that `lizzy` isn't an object. `lizzy` is currently holding the value `undefined`.
+
+# Problem #3
+Alter the code in problem 2 so that it produces the desired output: I'm scampering!.
+
+Reponse: 
+```javascript
+function Lizard() {
+  this.scamper = function() {
+    console.log("I'm scampering!");
+  };
+}
+
+let lizzy = new Lizard();
+lizzy.scamper(); // ?
+```
+
+# Practice Problems - Constructors and Prototypes
+# Problem #1
+What does the following code log to the console? Try to answer without running the code. Can you explain why the code produces the output it does?
+
+```javascript
+let RECTANGLE = {
+  area: function() {
+    return this.width * this.height;
+  },
+  perimeter: function() {
+    return 2 * (this.width + this.height);
+  },
+};
+
+function Rectangle(width, height) {
+  this.width = width;
+  this.height = height;
+  this.area = RECTANGLE.area();
+  this.perimeter = RECTANGLE.perimeter();
+}
+
+let rect1 = new Rectangle(2, 3);
+
+console.log(rect1.area);
+console.log(rect1.perimeter);
+```
+Response: 
+I believe this will throw an error because when the `area()` method is called on the `RECTANGLE` object, the execution context is the global object, on which the properties `width` and `height` are presumably missing.
+Gah, I need to remember that `undefined` is the result of a missing property. I was onto the right idea, but I still didn't get how it was defining the execution context. 
+
+
+# Problem #2
+How would you fix the problem in the code from problem 1?
+Reponse: 
+I would use the `call()` method to change the execution context of the method call within the constructor function `Rectangle()`.
+```javascript
+this.area = RECTANGLE.area.call(this);
+this.perimeter = RECTANGLE.perimeter.call(this);
+```
+
+# Problem #3
+Write a constructor function called Circle that takes a radius as an argument. You should be able to call an area method on any objects created by the constructor to get the circle's area. Test your implementation with the following code:
+
+Response:
+```javascript
+function Circle(radius) {
+  this.radius = radius;
+}
+
+Circle.prototype.area = function() {
+  return Math.PI * (this.radius ** 2);
+}
+```
+
+# Problem #4
+What will the following code log to the console and why?
+```javascript
+function Ninja() {
+  this.swung = true;
+}
+
+let ninja = new Ninja();
+
+Ninja.prototype.swingSword = function() {
+  return this.swung;
+};
+
+console.log(ninja.swingSword());
+```
+Response: This will log `true` to the console because `ninja` is an object whose prototype is `Ninja()`. So when the `swingSword()` method is defined, it is defined up the prototypal chain from `ninja`. Lastly when the `swingSword()` method is called on the `ninja` object, JS doesn't find it on `ninja` itself, but it DOES find it up the chain from `ninja` so it is able to be called and references the `swung` property which is on `ninja` object itself. 
+
+# Problem #5
+What will the following code output and why? Try to answer without running the code.
+```javascript
+function Ninja() {
+  this.swung = true;
+}
+
+let ninja = new Ninja();
+
+Ninja.prototype = {
+  swingSword: function() {
+    return this.swung;
+  },
+};
+
+console.log(ninja.swingSword());
+```
+Response: This will log the same thing as the previous question. But the difference was that instead of adding a method to the pre-existing `prototype` object on `Ninja`, the entire `prototype` object is reassigned to an object which includes essentially the same function.
+Smh, I see the error in my thinking. I was viewing the prototype as whatever object was currently assigned to the `prototype` property of the constructor. But really, when the `new` object is created, the hidden `[[Prototype]]` reference is assigned to the object at the `prototype` property of the constructor at the time the object is created. Then in this example, while the constructor function was reassigned, the previously created object had no idea, it was only connected to the `prototype` object by the value at `[[Prototype]]`... which hasn't changed. 
+
+
+# Problem #6
+Implement the method described in the comments below:
+```javascript
+function Ninja() {
+  this.swung = false;
+}
+
+// Add a swing method to the Ninja prototype which
+// modifies `swung` and returns the calling object
+
+let ninjaA = new Ninja();
+let ninjaB = new Ninja();
+
+console.log(ninjaA.swing().swung);      // logs `true`
+console.log(ninjaB.swing().swung);      // logs `true`
+```
+Response:
+```javascript
+Ninja.prototype.swing = function () {
+  this.swung = true;
+  return this;
+}
+```
+# Problem #7
+In this problem, we'll ask you to create a new instance of an object, without having direct access to the constructor function:
+```javascript
+let ninjaA;
+
+{
+  const Ninja = function() {
+    this.swung = false;
+  };
+
+  ninjaA = new Ninja();
+}
+
+// create a `ninjaB` object here; don't change anything else
+let ninjaB = Object.create(Object.getPrototypeOf(ninjaA));
+
+ninjaA.constructor === ninjaB.constructor // => true
+```
+Response: see above.
+Ah, I see the difference. I should have used the constructor route, that is how I could have accessed Ninja().
+
+# Problem #8
+Since a constructor is just a function, you can call it without the new operator. However, that can lead to unexpected results and errors, especially for inexperienced programmers. Write a constructor function that you can use with or without the new operator. The function should return the same result with either form. Use the code below to check your solution:
+```javascript
+function User(first, last) {
+  // ...
+}
+
+let name = 'Jane Doe';
+let user1 = new User('John', 'Doe');
+let user2 = User('John', 'Doe');
+
+console.log(name);         // => Jane Doe
+console.log(user1.name);   // => John Doe
+console.log(user2.name);   // => John Doe
+```
+Response: 
+```javascript
+function User(first, last) {
+  if(!(this instanceof User)) {
+    return new User(first, last);
+  }
+  this.name = `${first} ${last}`;
+}
+```
+
+# Practice Problems - Classes
+
+# Problem 1
+What do we mean when we say that classes are first-class values?
+Response: Classes are just functions, which are objects and which can be passed around like any other value in JS.
+
+# Problem 2
+Consider the following class declaration:
+```javascript
+class Television {
+  static manufacturer() {
+    // omitted code
+  }
+
+  model() {
+    // method logic
+  }
+}
+```
+What does the static modifier do? How would we call the method manufacturer?
+response: 
+The static modifier places the method in the `Television` object itself, instead of the default location of `Television.prototype`. We would call it like so `Television.manufacturer()`.
+
+# Practice Problems: Object Creation with Prototypes
+
+# Problem 1
+Use a factory function to create pet objects. The factory should let us create and use pets like this:
+```javascript
+let pudding = createPet("Cat", "Pudding");
+console.log(`I am a ${pudding.animal}. My name is ${pudding.name}.`);
+pudding.sleep(); // I am sleeping
+pudding.wake();  // I am awake
+
+let neptune = createPet("Fish", "Neptune");
+console.log(`I am a ${neptune.animal}. My name is ${neptune.name}.`);
+neptune.sleep(); // I am sleeping
+neptune.wake();  // I am awake
+```
+Response: 
+```javascript
+function createPet(animal, name) {
+  return {
+    animal: animal,
+    name: name,
+    
+    sleep() {
+      return `I am sleeping`;
+    },
+    wake() {
+      return `I am awake`
+    }
+  }
+}
+```
+
+# Problem 2
+ Use the OLOO pattern to create an object prototype that we can use to create pet objects. The prototype should let us create and use pets like this:
+ ```javascript
+let pudding = Object.create(PetPrototype).init("Cat", "Pudding");
+console.log(`I am a ${pudding.animal}. My name is ${pudding.name}.`);
+pudding.sleep(); // I am sleeping
+pudding.wake();  // I am awake
+
+let neptune = Object.create(PetPrototype).init("Fish", "Neptune");
+console.log(`I am a ${neptune.animal}. My name is ${neptune.name}.`);
+neptune.sleep(); // I am sleeping
+neptune.wake();  // I am awake
+ ```
+ Response:
+ ```javascript
+let PetPrototype = {
+  sleep() {
+    console.log(`I am sleeping`);
+  },
+  
+  wake() {
+    console.log(`I am awake`);
+  },
+  
+  init(animal, name) {
+    this.animal = animal;
+    this.name = name;
+    return this;
+  }
+  
+}
+ ```
+
+ # Problem 3
+ Consider the objects created by the programs in problems 1 and 2. How do objects for the same animal differ from each other?
+ Response:
+ The objects created by the first pattern (factory function) are not connected back to the factory function `createPet()` in any way in the code. They are each independent. They have their own unique state and methods.
+
+ Whereas the objects created by the second pattern (OLOO) are connected back to the `PetPrototype` object by the hidden `[[Prototype]]` reference which points back to `PetPrototype`. The instances of `PetPrototype` each have their own unique state, but their methods are inhereted from `PetPrototype` which is the "owner" of those methods and shares them down the chain to the pet instances. 
+
+# Practice Problems: Subtyping with Classes
+# Problem 1
+Suppose we have the following classes:
+```javascript
+class Game {
+  play() {
+    return 'Start the game!';
+  }
+}
+
+class Bingo extends Game {
+  rulesOfPlay() {
+    // rules of play
+  }
+}
+```
+What would happen if we added a play method to the Bingo class, keeping in mind that there is already a method of this name in the Game class from which the Bingo class inherits? Explain your answer. What do we call it when we define a method like this?
+
+Response:
+The newly defined `play()` method downstream from the `play()` method in `Game` would override the `play()` method in `Game`, which would be unavailable to anything down stream from `Bingo` then. Overriding, is what we call a downstream method of the same name from a method upstream. 
+
+# Problem 2
+Let's practice creating a class hierarchy.
+
+Create a class named Greeting that has a single method named greet. The method should take a string argument, and it should print that argument to the console.
+
+Now, create two more classes that inherit from Greeting: one named Hello, and the other Goodbye. The Hello class should have a hi method that takes no arguments and logs "Hello". The Goodbye class should have a bye method that logs "Goodbye". Use the greet method from the Greeting class when implementing Hello and Goodbye; don't call console.log from either Hello or Goodbye.
+
+Response: 
+
+```javascript
+class Greeting {
+  greet(msg) {
+    console.log(msg);
+  }
+}
+
+class Hello extends Greeting {
+  hi() {
+    this.greet("Hello");
+  }
+}
+
+class Goodbye extends Greeting {
+  bye() {
+    this.greet("Goodbye");
+  }
+}
+```
