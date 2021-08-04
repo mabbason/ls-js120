@@ -1,34 +1,38 @@
-/*
-Game (n)
-Board (n)
-Row (n)
-Square (n)
-Marker (n)
-Player (n)
-  Mark (v)
-  Play (v)
-  Human (n)
-  Computer (n)
-*/
+const readline = require('readline-sync');
+
+class Square {
+  static BLANK_MARKER = " ";
+  static HUMAN_MARKER = "X";
+  static COMPUTER_MARKER = "O";
+
+  constructor(marker = " ") {
+    this.marker = marker;
+  }
+
+  toString() {
+    return this.marker;
+  }
+
+  setMarker(marker) {
+    this.marker = marker;
+  }
+
+  getMarker() {
+    return this.marker;
+  }
+
+  isUnused() {
+    return this.marker === Square.BLANK_MARKER;
+  }
+}
 
 class Board {
   constructor() {
-    this.squares = {
-      "1": "X",
-      "2": " ",
-      "3": " ",
-      "4": " ",
-      "5": "O",
-      "6": " ",
-      "7": " ",
-      "8": " ",
-      "9": " ",
-    };
+    this.clear();
+  }
 
-    //STUB
-    // model 3X3 grid
-    // data structure, array, object, etc?
-    // what does the structure need to store
+  markSquareAt(key, marker) {
+    this.squares[key].setMarker(marker);
   }
 
   display() {
@@ -46,108 +50,197 @@ class Board {
     console.log("     |     |");
     console.log("");
   }
-}
 
-class Row {
-  constructor() {
-    //STUB 
-    // need to identify a three square "row"
+  unusedSquares() {
+    let keys = Object.keys(this.squares);
+    return keys.filter(key => this.squares[key].isUnused());
   }
-}
 
-class Square {
-  constructor() {
-    //STUB
-    // need to track what player marker is in the square, or empty
+  isFull() {
+    return this.unusedSquares().length === 0;
   }
-}
 
-class Marker {
-  constructor() {
-    //STUB
-    // a player's "piece" on the board
+  countMarkersFor(player, keys) {
+    let markers = keys.filter(key => {
+      return this.squares[key].getMarker() === player.getMarker();
+    });
+    return markers.length;
+  }
+
+  clear() {
+    this.squares = {};
+    for (let cntr = 1; cntr <= 9; ++cntr) {
+      this.squares[cntr] = new Square();
+    }
   }
 }
 
 class Player {
-  constructor() {
-    //STUB
-    // need to track the player decision on where to place a square
+  constructor(marker) {
+    this.marker = marker;
   }
 
-  mark() {
-    //STUB
-    //need to get the player's decision to store in the board
-  }
-
-  play() {
-    //STUB
-    //need to get the player's decision
+  getMarker() {
+    return this.marker;
   }
 }
 
 class Human extends Player {
   constructor() {
-    //STUB
+    super(Square.HUMAN_MARKER);
+  }
+
+  joinOr(arr, sep = ', ', word = 'or') {
+    let numSequence = '';
+
+    if (arr.length === 1) {
+      numSequence += arr[0];
+    } else if (arr.length === 2) {
+      numSequence += `${arr[0]} ${word} ${arr[1]}`;
+    } else if (arr.length >= 3) {
+      for (let index = 0; index < arr.length; index += 1) {
+        if (index === arr.length - 1) {
+          numSequence += `${word} ${arr[index]}`;
+        } else {
+          numSequence += `${arr[index]}${sep}`;
+        }
+      }
+    }
+    return numSequence;
   }
 }
 
 class Computer extends Player {
   constructor() {
-    //STUB
+    super(Square.COMPUTER_MARKER);
   }
 }
 
 class TTTGame {
+  static POSSIBLE_WINNING_ROWS = [
+    [ "1", "2", "3" ],            // top row of board
+    [ "4", "5", "6" ],            // center row of board
+    [ "7", "8", "9" ],            // bottom row of board
+    [ "1", "4", "7" ],            // left column of board
+    [ "2", "5", "8" ],            // middle column of board
+    [ "3", "6", "9" ],            // right column of board
+    [ "1", "5", "9" ],            // diagonal: top-left to bottom-right
+    [ "3", "5", "7" ],            // diagonal: bottom-left to top-right
+  ];
+
   constructor() {
-    //STUB
-    // what is state for game? board, players
     this.board = new Board();
+    this.human = new Human();
+    this.computer = new Computer();
   }
 
   play() {
-    // SPIKE
+    console.clear();
     this.displayWelcomeMsg();
 
     while (true) {
-      this.board.display();
+      this.playGameOnce();
 
-      this.firstPlayerMoves();
-      if (this.gameOver()) break;
+      if (!this.playAgain()) break;
 
-      this.secondPlayerMoves();
-      if(this.gameOver()) break;
-      break;
     }
 
-    this.displayResults();
     this.displayGoodbyeMsg();
-    
   }
 
+  playGameOnce() {
+    this.board.clear();
+    while (true) {
+      this.board.display();
+
+      this.humanMoves();
+      if (this.gameOver()) break;
+
+      console.clear();
+      console.log("");
+
+      this.computerMoves();
+      if (this.gameOver()) break;
+    }
+    this.displayResults();
+  }
+
+  playAgain() {
+    let response;
+    while (true) {
+      console.log('\nWould you like to take yer chances again? (y or n)');
+      response = readline.question().toLowerCase();
+
+      if (response === 'y' || response === 'n') {
+        console.clear();
+        break;
+      }
+
+      console.clear();
+      console.log(`Lis'n pal... it's only 'y' or 'n'... try again`);
+
+    }
+    return response === 'y';
+  }
+
+
   displayWelcomeMsg() {
-    console.log(`Welcome to Tic-Tac-Toe!`);
+    console.clear();
+    console.log("Welcome to Danger Dan's Rootin' Tootin' Tic Tac Toe!");
   }
 
   displayGoodbyeMsg() {
-    console.log(`Thanks for playing Tic-Tac-Toe! Ya'll come back now!`);
+    console.log(`Thanks for playing Rootin' Tootin' Tic-Tac-Toe! Ya'll come back now!`);
   }
 
-  firstPlayerMoves() {
-    //STUB
+  humanMoves() {
+    let choice;
+
+    while (true) {
+      let validChoices = this.board.unusedSquares();
+      const prompt = `Cowboy up and choose a square (${this.human.joinOr(validChoices)}): `;
+      choice = readline.question(prompt);
+
+      if (validChoices.includes(choice)) break;
+
+      console.log(`Sorry pardner, that ain't a valid choice.`);
+    }
+    this.board.markSquareAt(choice, this.human.getMarker());
   }
 
-  secondPlayerMoves() {
-    //STUB
+  computerMoves() {
+    let validChoices =  this.board.unusedSquares();
+    let choice;
+
+    do {
+      choice = Math.floor((9 * Math.random()) + 1).toString();
+    } while (!validChoices.includes(choice));
+
+    this.board.markSquareAt(choice, this.computer.getMarker());
   }
 
   displayResults() {
-    //STUB
+    if (this.isWinner(this.human)) {
+      console.log("You won! Git 'er done.");
+    } else if (this.isWinner(this.computer)) {
+      console.log("I beat you! Bet yer din't see that comin'!!");
+    } else {
+      console.log("A tie game. Mmmhmmm... next.");
+    }
   }
 
   gameOver() {
-    //STUB
-    return false;
+    return this.board.isFull() || this.somoneWon();
+  }
+
+  somoneWon() {
+    return this.isWinner(this.human) || this.isWinner(this.computer);
+  }
+
+  isWinner(player) {
+    return TTTGame.POSSIBLE_WINNING_ROWS.some(row => {
+      return this.board.countMarkersFor(player, row) === 3;
+    });
   }
 
 }
