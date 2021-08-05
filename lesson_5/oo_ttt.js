@@ -27,12 +27,18 @@ class Square {
 }
 
 class Board {
+  static CENTER_SQUARE = '5';
+
   constructor() {
     this.clear();
   }
 
   markSquareAt(key, marker) {
     this.squares[key].setMarker(marker);
+  }
+
+  getMarkerAt(key) {
+    return this.squares[key].getMarker();
   }
 
   display() {
@@ -53,7 +59,11 @@ class Board {
 
   unusedSquares() {
     let keys = Object.keys(this.squares);
-    return keys.filter(key => this.squares[key].isUnused());
+    return keys.filter(key => this.isUnusedSquare(key));
+  }
+
+  isUnusedSquare(key) {
+    return this.squares[key].isUnused();
   }
 
   isFull() {
@@ -208,15 +218,66 @@ class TTTGame {
     this.board.markSquareAt(choice, this.human.getMarker());
   }
 
-  computerMoves() {
-    let validChoices =  this.board.unusedSquares();
-    let choice;
 
-    do {
-      choice = Math.floor((9 * Math.random()) + 1).toString();
-    } while (!validChoices.includes(choice));
+  computerMoves() {
+    let choice = this.computerAI(this.computer.getMarker());
+
+    if (!choice) {
+      choice = this.computerAI(this.human.getMarker());
+    }
+
+    if (!choice) {
+      if (this.board.getMarkerAt(Board.CENTER_SQUARE)
+        === Square.BLANK_MARKER) {
+        choice = Board.CENTER_SQUARE;
+      }
+    }
+
+    if (!choice) {
+      let validChoices = this.board.unusedSquares();
+
+      do {
+        choice = Math.floor((9 * Math.random()) + 1).toString();
+      } while (!validChoices.includes(choice));
+    }
 
     this.board.markSquareAt(choice, this.computer.getMarker());
+  }
+
+  computerAI(marker) {
+    let choice;
+
+    for (let index = 0; index <
+         TTTGame.POSSIBLE_WINNING_ROWS.length; index += 1) {
+      let row = TTTGame.POSSIBLE_WINNING_ROWS[index];
+
+      choice = this.findWinningSquare(row, marker);
+      if (choice) break;
+    }
+
+    return choice;
+  }
+
+  findWinningSquare(row, marker) {
+    let markersInRow = row.map(square => this.board.getMarkerAt(square));
+    console.log(`markersInRow: ${markersInRow}`);
+    if (markersInRow.filter(val => val === marker).length === 2) {
+      console.log(`markersInRow: ${markersInRow}`);
+      let unusedSquare = row.find(square => this.board.getMarkerAt(square) ===
+                                  Square.BLANK_MARKER);
+      if (unusedSquare !== undefined) {
+        return unusedSquare;
+      }
+    }
+    return null;
+  }
+
+  computerThinking(ms) {
+    console.log('Computer thinking...');
+    let waitTill = new Date(new Date().getTime() + ms);
+    while (waitTill > new Date()) {
+      continue;
+    }
   }
 
   displayResults() {
