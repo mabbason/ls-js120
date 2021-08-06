@@ -8,25 +8,19 @@
 Explain why this method will not return the desired object?
 Try fixing this problem by taking advantage of JavaScript lexical scoping rules.
 */
-// let franchise = {
-//   name: 'How to Train Your Dragon',
-//   allMovies: function() {
-//     let self = this;
-//     return [1, 2, 3].map(function(number) {
-//       return self.name + ' ' + number;
-//     });
-//   },
-// };
-
-// console.log(franchise.allMovies());
 
 let franchise = {
   name: 'How to Train Your Dragon',
   allMovies: function() {
+    let self = this;
     return [1, 2, 3].map(function(number) {
-      return this.name + ' ' + number;
-    });
+      return self.name + ' ' + number;
+    }).bind(this);
   },
 };
 
-console.log(franchise.allMovies.bind(franchise));
+console.log(franchise.allMovies(franchise));
+// `this` loses context when nested within another
+// function (unless it's an arrow function)
+// so the value of `this` on line 17 is no longer the
+// `franchise` object.
